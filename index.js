@@ -1,5 +1,4 @@
 const express = require("express");
-const {response, request} = require("express");
 const app = express();
 const porta = 3000;
 
@@ -18,47 +17,48 @@ const pessoas = [
 ];
 
 app.get('/pessoas', (request, response)=>{
-    response.send(pessoas);
+    return response.status(200).send(pessoas);
 });
 
 app.get('/pessoas/:id', (request, response)=>{
-    for (let i = 0; i <= pessoas.length; i++) {
-        if (pessoas[i].id === request.params.id) {
-            return response.send(`Nome: ${pessoas[i].nome}, Idade: ${pessoas[i].idade}`);
+    pessoas.find((p) => {
+        if(p.id === request.params.id){
+            return response.status(200).send(p);
         }
-    }
-    response.send("Usuário não encontrado");
+    });
+    return response.status(404).send("Pessoa não encontrada.");
 });
 
 app.post('/pessoas', (request, response) =>{
-    if(request.body !== undefined){
-        for (let i = 0; i <= pessoas.length; i++) {
-            if(request.body.id !== pessoas[i].id){
-                pessoas.push(request.body);
-                return response.json({pessoas});
-            }
+    if(request.body === undefined){
+        return response.send("Sem dados para adicionar");
+    }
+    for (let i = 0; i < pessoas.length; i++) {
+        if(pessoas[i].id === request.body.id) {
             return response.send("Este usuário já existe");
         }
     }
-    return response.send("Sem dados para adicionar");
+    pessoas.push(request.body);
+    return response.status(200).send(pessoas);
 });
 
 app.put('/pessoas/:id', (request, response)=>{
-    for (let i = 0; i <= pessoas.length; i++) {
-        if (pessoas[i].id === request.params.id) {
-            pessoas[i].nome = request.body.nome;
-            return response.send(`Nome: ${pessoas[i].nome}, Idade: ${pessoas[i].idade}`);
+    pessoas.find((p) => {
+        if (p.id === request.params.id) {
+            p = {...p, ...request.body};
+            return response.status(200).send(p);
+        } else {
+            return false;
         }
-    }
-    return response.send("Usuário não encontrado");
+    });
+    response.status(404).send("Pessoa não encontrada.");
 });
 
 app.delete('/pessoas/:id', (request, response)=>{
-    for (let i = 0; i <= pessoas.length; i++) {
-        if (pessoas[i].id === request.params.id) {
-            delete pessoas[i];
-            return response.json({pessoas});
-        }
-        return response.send("Usuário não encontrado");
+    let index = pessoas.findIndex(pessoa=> pessoa.id === request.params.id)
+    if (index !== -1) {
+        pessoas.splice(index, 1);
+        return response.status(200).send(pessoas);
     }
+    response.status(404).send("Pessoa não encontrada.");
 });
