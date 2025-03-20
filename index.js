@@ -21,21 +21,20 @@ app.get('/pessoas', (request, response)=>{
 });
 
 app.get('/pessoas/:id', (request, response)=>{
-    pessoas.find((p) => {
-        if(p.id === request.params.id){
-            return response.status(200).send(p);
-        }
-    });
+    const pessoa = pessoas.find((p) => p.id === request.params.id);
+    if(pessoa){
+        return response.status(200).send(pessoa);
+    }
     return response.status(404).send("Pessoa não encontrada.");
 });
 
 app.post('/pessoas', (request, response) =>{
     if(request.body === undefined){
-        return response.send("Sem dados para adicionar");
+        return response.status(400).send("Sem dados para adicionar");
     }
     for (let i = 0; i < pessoas.length; i++) {
         if(pessoas[i].id === request.body.id) {
-            return response.send("Este usuário já existe");
+            return response.status(400).send("Este usuário já existe");
         }
     }
     pessoas.push(request.body);
@@ -43,19 +42,16 @@ app.post('/pessoas', (request, response) =>{
 });
 
 app.put('/pessoas/:id', (request, response)=>{
-    pessoas.find((p) => {
-        if (p.id === request.params.id) {
-            p = {...p, ...request.body};
-            return response.status(200).send(p);
-        } else {
-            return false;
-        }
-    });
+    const pessoa = pessoas.find((p) => p.id === request.params.id);
+    if(pessoa){
+        Object.assign(pessoa, request.body);
+        return response.status(200).send(pessoa);
+    }
     response.status(404).send("Pessoa não encontrada.");
 });
 
 app.delete('/pessoas/:id', (request, response)=>{
-    let index = pessoas.findIndex(pessoa=> pessoa.id === request.params.id)
+    let index = pessoas.findIndex(pessoa=> pessoa.id === request.params.id);
     if (index !== -1) {
         pessoas.splice(index, 1);
         return response.status(200).send(pessoas);
