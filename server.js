@@ -20,16 +20,16 @@ app.get('/pessoas/:id', (request, response)=>{
     if(pessoa){
         return response.status(200).send(pessoa);
     }
-    return response.status(404).send("Pessoa não encontrada.");
+    return response.status(404).send({mensagem: "Pessoa não encontrada"});
 });
 
 app.post('/pessoas', (request, response) =>{
-    if(request.body === undefined){
-        return response.status(400).send("Sem dados para adicionar");
+    if(request.body?.nome === undefined || request.body?.idade === undefined || request.body?.id === undefined){
+        return response.status(400).send({mensagem: "Sem dados para adicionar"});
     }
     for (let i = 0; i < pessoas.length; i++) {
         if(pessoas[i].id === request.body.id) {
-            return response.status(400).send("Este usuário já existe");
+            return response.status(400).send({mensagem: "Este usuário já existe"});
         }
     }
     pessoas.push(request.body);
@@ -42,7 +42,8 @@ app.put('/pessoas/:id', (request, response)=>{
         Object.assign(pessoa, request.body);
         return response.status(200).send(pessoa);
     }
-    response.status(404).send("Pessoa não encontrada.");
+    response.status(404).send({mensagem: "Pessoa não encontrada"});
+
 });
 
 app.delete('/pessoas/:id', (request, response)=>{
@@ -51,7 +52,7 @@ app.delete('/pessoas/:id', (request, response)=>{
         pessoas.splice(index, 1);
         return response.status(200).send(pessoas);
     }
-    response.status(404).send("Pessoa não encontrada.");
+    response.status(404).send({mensagem: "Pessoa não encontrada"});
 });
 
 module.exports = app;
