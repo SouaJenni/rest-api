@@ -28,17 +28,11 @@ app.get('/pessoas/:id', (request, response)=>{
 
 app.post('/pessoas', (request, response) =>{
     console.log("Criando pessoa");
-    if(request.body?.nome === undefined || request.body?.idade === undefined || request.body?.id === undefined){
+    if(request.body?.nome === undefined || request.body?.idade === undefined){
         console.log("Sem dados para adicionar");
         return response.status(400).send({mensagem: "Sem dados para adicionar"});
     }
-    for (let i = 0; i < pessoas.length; i++) {
-        if(pessoas[i].id === request.body.id) {
-            console.log("Este usuário já existe");
-            return response.status(400).send({mensagem: "Este usuário já existe"});
-        }
-    }
-    pessoas.push(request.body);
+    pessoas.push({...request.body, id: `${pessoas.length + 1}`});
     return response.status(200).send(pessoas);
 });
 
