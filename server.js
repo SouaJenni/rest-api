@@ -7,62 +7,71 @@ app.use(express.json());
 const connection = await mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'PASSWORD',
+    password: 'PASS',
     database: 'dbapi',
 });
 
 connection.connect((err) => {
-    console.log('Conexão bem sucedida!')
+    if(err){
+        console.log('Algo deu errado!');
+    }else{
+        console.log('Conexão bem sucedida!');
+    }
 })
 
 app.get ('/pessoas', async (request, response) => {
     console.log('Pegando pessoas');
-    const [results, fields] = await connection.execute('SELECT id, nome, idade FROM Pessoas');
-    console.log(results);
-    return response.status(200).send(results);
-});
-
-app.get('/pessoas/:id', (request, response)=>{
-    console.log('Pegando pessoa...', id);
-    const pessoa = pessoas.find((p) => p.id === request.params.id);
-    if(pessoa){
-        return response.status(200).send(pessoa);
+    try{
+        const [results, fields] = await connection.execute('SELECT id, nome, idade FROM Pessoas');
+        return response.status(200).send(results);
+    }catch (e){
+        return response.status(500).send(e);
     }
-    console.log('Pessoa não encontrada');
-    return response.status(404).send({mensagem: 'Pessoa não encontrada'});
 });
 
-app.post('/pessoas', (request, response) =>{
+app.get('/pessoas/:id', async (request, response)=>{
+    console.log('Pegando pessoa...');
+    try{
+        const [results, fields] = await connection.execute('SELECT id, nome, idade FROM Pessoas WHERE id = ?',
+            [request.params.id]);
+        if(results){
+            return response.status(200).send(results[0]);
+        }
+    }catch (e){
+        return response.status(404).send(e);
+    }
+});
+
+app.post('/pessoas', async (request, response) =>{
     console.log('Criando pessoa');
-    if(request.body?.nome === undefined || request.body?.idade === undefined){
-        console.log('Sem dados para adicionar');
-        return response.status(400).send({mensagem: 'Sem dados para adicionar'});
+    try{
+        const [results, fields] = await connection.execute('INSERT INTO Pessoas (nome, idade) VALUES (?, ?)',
+            [request.body.nome, request.body.idade]);
+        return response.status(201).send(results);
+    }catch (e){
+        return response.status(500).send(e);
     }
-    pessoas.push({...request.body, id: `${pessoas.length + 1}`});
-    return response.status(200).send(pessoas);
 });
 
-app.put('/pessoas/:id', (request, response)=>{
+app.put('/pessoas/:id', async (request, response)=>{
     console.log('Atualizando pessoa');
-    const pessoa = pessoas.find((p) => p.id === request.params.id);
-    if(pessoa){
-        Object.assign(pessoa, request.body);
-        return response.status(200).send(pessoa);
+    try{
+        const [results, fields] = await connection.execute('UPDATE Pessoas SET nome = ?, idade = ? WHERE id = ?',
+            [request.body.nome, request.body.idade, request.params.id])
+        return response.status(200).send(results);
+    }catch (e){
+        return response.status(404).send(e);
     }
-    console.log('Pessoa não encontrada');
-    response.status(404).send({mensagem: 'Pessoa não encontrada'});
-
 });
 
-app.delete('/pessoas/:id', (request, response)=>{
+app.delete('/pessoas/:id', async (request, response)=>{
     console.log('Deletando pessoa');
-    let index = pessoas.findIndex(pessoa=> pessoa.id === request.params.id);
-    if (index !== -1) {
-        pessoas.splice(index, 1);
-        return response.status(200).send(pessoas);
+    try{
+        const [results, fields] = await connection.execute('DELETE FROM Pessoas WHERE id = ?', [request.params.id]);
+        return response.status(200).send(results);
+    }catch (e){
+        return response.status(404).send(e);
     }
-    console.log('Pessoa não encontrada');
-    response.status(404).send({mensagem: 'Pessoa não encontrada'});
 });
 
 export default app;
