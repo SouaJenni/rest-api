@@ -31,21 +31,24 @@ app.get ('/pessoas', async (request, response) => {
 
 app.get('/pessoas/:id', async (request, response)=>{
     console.log('Pegando pessoa...');
-    try{
-        const [results, fields] = await connection.execute('SELECT id, nome, idade FROM Pessoas WHERE id = ?',
-            [request.params.id]);
-        console.log('results', results);
-        if(results.length === 0){
-            return response.status(404).send({mensagem: "Pessoa não encontrada!"});
+        try{
+            const [results, fields] = await connection.execute('SELECT id, nome, idade FROM Pessoas WHERE id = ?',
+                [request.params.id]);
+            console.log('results', results);
+            if(results.length === 0){
+                return response.status(404).send({mensagem: "Pessoa não encontrada!"});
+            }
+            return response.status(200).send(results[0]);
+        }catch (e){
+            return response.status(500).send(e);
         }
-        return response.status(200).send(results[0]);
-    }catch (e){
-        return response.status(500).send(e);
-    }
 });
 
 app.post('/pessoas', async (request, response) =>{
     console.log('Criando pessoa');
+    if(request.body?.nome === undefined || request.body?.idade === undefined){
+        return response.status(204).send({mensagem: 'Sem dados para adicionar'});
+    }
     try{
         const [results, fields] = await connection.execute('INSERT INTO Pessoas (nome, idade) VALUES (?, ?)',
             [request.body.nome, request.body.idade]);
@@ -65,11 +68,18 @@ app.post('/pessoas', async (request, response) =>{
 
 app.put('/pessoas/:id', async (request, response)=>{
     console.log('Atualizando pessoa');
+    if(request.body?.nome === undefined || request.body?.idade === undefined){
+        return response.status(204).send({mensagem: 'Sem dados para adicionar'});
+    }
     try{
+        const [rows] = await connection.execute('SELECT * FROM Pessoas WHERE id = ?', [request.params.id]);
+        if (rows.length === 0) {
+            return response.status(404).send('Pessoa não encontrada!');
+        }
         const [results, fields] = await connection.execute('UPDATE Pessoas SET nome = ?, idade = ? WHERE id = ?',
             [request.body.nome, request.body.idade, request.params.id])
         if(results.changedRows === 0){
-            return response.status(404).send({mensagem: 'Pessoa não encontrada'});
+            return response.status(400).send({mensagem: 'Erro ao atualizar.'});
         }
         const pessoaEditada = {
             id: request.params.id,
