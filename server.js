@@ -47,7 +47,7 @@ app.get('/pessoas/:id', async (request, response)=>{
 app.post('/pessoas', async (request, response) =>{
     console.log('Criando pessoa');
     if(request.body?.nome === undefined || request.body?.idade === undefined){
-        return response.status(204).send({mensagem: 'Sem dados para adicionar'});
+        return response.status(400).send({mensagem: 'Sem dados para adicionar'});
     }
     try{
         const [results, fields] = await connection.execute('INSERT INTO Pessoas (nome, idade) VALUES (?, ?)',
@@ -69,7 +69,7 @@ app.post('/pessoas', async (request, response) =>{
 app.put('/pessoas/:id', async (request, response)=>{
     console.log('Atualizando pessoa');
     if(request.body?.nome === undefined || request.body?.idade === undefined){
-        return response.status(204).send({mensagem: 'Sem dados para adicionar'});
+        return response.status(400).send({mensagem: 'Sem dados para adicionar'});
     }
     try{
         const [rows] = await connection.execute('SELECT * FROM Pessoas WHERE id = ?', [request.params.id]);
